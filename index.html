@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zip - Snake Path</title>
+    <title>Zip - Archive Enabled</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -16,12 +16,12 @@
             --bg: #f8f9fa;
             --grid-bg: #ffffff;
             --grid-border: #e0e0e0;
-            --cell-border: #ebebeb; /* lighter border for cleaner look */
+            --cell-border: #ebebeb;
             --number-bg: #1a1a1a;
             --number-text: #ffffff;
             --path-start: #4a90d9;
             --path-end: #7c5ce7;
-            --path-thickness: 16px; /* Width of the snake body */
+            --path-thickness: 16px; 
             --success: #00c853;
         }
 
@@ -43,6 +43,8 @@
             flex-direction: column;
             align-items: center;
             gap: 24px;
+            width: 100%;
+            max-width: 600px;
         }
 
         .game-container {
@@ -103,19 +105,10 @@
             transition: background-color 0.15s ease;
         }
 
-        /* --- SNAKE STYLING START --- */
+        /* --- SNAKE STYLING --- */
+        .cell.filled { background: transparent; }
+        .cell.path, .cell.current { background: transparent; box-shadow: none; }
 
-        /* Remove the old full-square background */
-        .cell.filled {
-            background: transparent; 
-        }
-
-        .cell.path, .cell.current {
-            background: transparent;
-            box-shadow: none;
-        }
-
-        /* The "Joint" - A circle in the center of every path cell to round the corners */
         .cell.path::before, .cell.current::before {
             content: '';
             position: absolute;
@@ -123,49 +116,44 @@
             height: var(--path-thickness);
             background: linear-gradient(135deg, var(--path-start), var(--path-end));
             border-radius: 50%;
-            z-index: 5; /* Below numbers (10) but above connectors (4) */
+            z-index: 5;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
         }
 
-        /* The "Head" - Special styling for the current leading cell */
         .cell.current::before {
             transform: translate(-50%, -50%) scale(1.4);
             box-shadow: 0 0 10px rgba(124, 92, 231, 0.5);
             z-index: 6;
         }
 
-        /* Path connectors (The Body) */
         .connector {
             position: absolute;
             background: linear-gradient(135deg, var(--path-start), var(--path-end));
-            z-index: 4; /* Below joints */
+            z-index: 4;
             pointer-events: none;
         }
 
-        /* Update connector dimensions to be thin lines */
         .connector.horizontal {
             height: var(--path-thickness);
-            width: calc(50% + 2px); /* +2px ensures overlap with center joint */
+            width: calc(50% + 2px);
             top: 50%;
             margin-top: calc(var(--path-thickness) / -2);
         }
 
         .connector.vertical {
             width: var(--path-thickness);
-            height: calc(50% + 2px); /* +2px ensures overlap with center joint */
+            height: calc(50% + 2px);
             left: 50%;
             margin-left: calc(var(--path-thickness) / -2);
         }
 
-        /* Positioning logic for connectors */
         .connector.right { left: 50%; }
         .connector.left { right: 50%; left: auto; }
         .connector.down { top: 50%; }
         .connector.up { bottom: 50%; top: auto; }
-
-        /* --- SNAKE STYLING END --- */
+        /* ------------------- */
 
         .cell.wall-top { border-top: 3px solid #1a1a1a; }
         .cell.wall-bottom { border-bottom: 3px solid #1a1a1a; }
@@ -184,7 +172,7 @@
             font-family: 'DM Sans', sans-serif;
             font-weight: 700;
             font-size: 14px;
-            z-index: 10; /* Must be above the snake body */
+            z-index: 10;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             position: relative;
         }
@@ -294,11 +282,6 @@
             margin-bottom: 8px;
         }
 
-        .message p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-
         .overlay {
             position: fixed;
             inset: 0;
@@ -309,10 +292,7 @@
             z-index: 99;
         }
 
-        .overlay.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .overlay.show { opacity: 1; pointer-events: auto; }
 
         .instructions {
             max-width: 400px;
@@ -322,7 +302,7 @@
             line-height: 1.5;
         }
 
-        /* Level Creator Styles */
+        /* --- MODE TOGGLE & LAYOUT --- */
         .mode-toggle {
             display: flex;
             background: white;
@@ -350,10 +330,20 @@
             color: white;
         }
 
-        .mode-btn:not(.active):hover {
-            background: #f5f5f5;
+        .mode-btn:not(.active):hover { background: #f5f5f5; }
+
+        .game-container:not(.active),
+        .creator-container:not(.active),
+        .archive-container:not(.active) {
+            display: none !important;
         }
 
+        .creator-container.active, 
+        .archive-container.active {
+            display: flex;
+        }
+
+        /* --- CREATOR STYLES --- */
         .creator-controls {
             display: flex;
             gap: 12px;
@@ -364,18 +354,9 @@
         }
 
         .creator-container {
-            display: none;
             flex-direction: column;
             align-items: center;
             gap: 24px;
-        }
-
-        .creator-container.active {
-            display: flex;
-        }
-
-        .game-container:not(.active) {
-            display: none;
         }
 
         .creator-cell {
@@ -394,51 +375,27 @@
         .creator-cell.wall-left { border-left: 3px solid #1a1a1a; }
         .creator-cell.wall-right { border-right: 3px solid #1a1a1a; }
 
-        .creator-cell .edge-zone {
-            position: absolute;
-            z-index: 5;
-        }
-
+        .creator-cell .edge-zone { position: absolute; z-index: 5; }
         .creator-cell .edge-zone.top { top: 0; left: 8px; right: 8px; height: 8px; cursor: n-resize; }
         .creator-cell .edge-zone.bottom { bottom: 0; left: 8px; right: 8px; height: 8px; cursor: s-resize; }
         .creator-cell .edge-zone.left { left: 0; top: 8px; bottom: 8px; width: 8px; cursor: w-resize; }
         .creator-cell .edge-zone.right { right: 0; top: 8px; bottom: 8px; width: 8px; cursor: e-resize; }
         .creator-cell .edge-zone:hover { background: rgba(26, 26, 26, 0.3); }
 
-        .output-area {
-            width: 100%;
-            max-width: 500px;
-        }
-
-        .output-area label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
+        .output-area { width: 100%; max-width: 500px; }
+        .output-area label { display: block; font-weight: 500; margin-bottom: 8px; color: #333; }
         .output-area textarea {
-            width: 100%;
-            height: 150px;
-            font-family: 'Space Mono', monospace;
-            font-size: 0.8rem;
-            padding: 12px;
-            border: 2px solid var(--grid-border);
-            border-radius: 8px;
-            resize: vertical;
+            width: 100%; height: 150px; font-family: 'Space Mono', monospace;
+            font-size: 0.8rem; padding: 12px; border: 2px solid var(--grid-border);
+            border-radius: 8px; resize: vertical;
         }
-
-        .output-area textarea:focus {
-            outline: none;
-            border-color: var(--path-start);
-        }
+        .output-area textarea:focus { outline: none; border-color: var(--path-start); }
 
         .btn-clear { background: #ff6b6b; color: white; }
         .btn-clear:hover { background: #ee5a5a; }
         .btn-copy { background: var(--number-bg); color: white; }
         .btn-copy:hover { background: #333; }
         .btn-test { background: linear-gradient(135deg, var(--path-start), var(--path-end)); color: white; }
-        .btn-test:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 144, 217, 0.35); }
 
         .creator-instructions {
             max-width: 400px;
@@ -448,7 +405,47 @@
             line-height: 1.6;
         }
 
-        .creator-instructions strong { color: #555; }
+        /* --- ARCHIVE STYLES --- */
+        .archive-container {
+            width: 100%;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .archive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 12px;
+            width: 100%;
+            background: var(--grid-bg);
+            padding: 20px;
+            border-radius: 16px;
+            border: 2px solid var(--grid-border);
+        }
+
+        .level-card {
+            aspect-ratio: 1;
+            background: #f0f0f0;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .level-card:hover {
+            background: white;
+            border-color: var(--path-start);
+            box-shadow: 0 4px 12px rgba(74, 144, 217, 0.2);
+            color: var(--path-start);
+            transform: translateY(-2px);
+        }
 
         @media (max-width: 500px) {
             .cell, .creator-cell { width: 42px; height: 42px; }
@@ -469,34 +466,34 @@
         <div class="mode-toggle">
             <button class="mode-btn active" onclick="setMode('play')">Play</button>
             <button class="mode-btn" onclick="setMode('create')">Create</button>
+            <button class="mode-btn" onclick="setMode('archive')">Archive</button>
         </div>
 
         <div class="game-container active" id="game-mode">
-
-        <div class="grid-wrapper">
-            <div class="grid" id="grid"></div>
-        </div>
-
-        <div class="status-bar">
-            <div class="stat">
-                <span class="stat-value" id="progress">0/64</span>
-                <span class="stat-label">Cells Filled</span>
+            <div class="grid-wrapper">
+                <div class="grid" id="grid"></div>
             </div>
-            <div class="stat">
-                <span class="stat-value" id="next-number">1</span>
-                <span class="stat-label">Next Number</span>
+
+            <div class="status-bar">
+                <div class="stat">
+                    <span class="stat-value" id="progress">0/64</span>
+                    <span class="stat-label">Cells Filled</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="next-number">1</span>
+                    <span class="stat-label">Next Number</span>
+                </div>
             </div>
-        </div>
 
-        <div class="controls">
-            <button class="btn-reset" onclick="resetPuzzle()">Reset</button>
-            <button class="btn-new" onclick="newPuzzle()">New Puzzle</button>
-        </div>
+            <div class="controls">
+                <button class="btn-reset" onclick="resetPuzzle()">Reset</button>
+                <button class="btn-new" onclick="loadNextBuiltIn()">Next Level</button>
+            </div>
 
-        <p class="instructions">
-            Draw a path starting from 1, visiting each number in order. 
-            Fill every cell on the grid to complete the puzzle.
-        </p>
+            <p class="instructions">
+                Draw a path starting from 1, visiting each number in order. 
+                Fill every cell on the grid to complete the puzzle.
+            </p>
         </div>
 
         <div class="creator-container" id="create-mode">
@@ -517,23 +514,28 @@
             </div>
 
             <p class="creator-instructions">
-                <strong>Click center</strong> of a cell to place the next number.<br>
-                <strong>Click edge</strong> of a cell to toggle a wall.<br>
-                <strong>Right-click number</strong> to remove it.
+                <strong>Click center</strong> to place number.<br>
+                <strong>Click edge</strong> to toggle wall.<br>
+                <strong>Right-click number</strong> to remove.
             </p>
         </div>
+
+        <div class="archive-container" id="archive-mode">
+            <div class="archive-grid" id="archive-grid">
+                </div>
+        </div>
     </div>
+
     <div class="overlay" id="overlay"></div>
     <div class="message" id="message">
         <h2>🎉 Complete!</h2>
         <p>You solved the puzzle!</p>
-        <button class="btn-new" onclick="newPuzzle(); hideMessage();">Play Again</button>
+        <button class="btn-new" onclick="loadNextBuiltIn(); hideMessage();">Next Level</button>
     </div>
 
     <script>
-        // Puzzle definitions
-        const puzzles = [
-            // Puzzle from the screenshot
+        // Built-in puzzles (Fallbacks)
+        const builtInPuzzles = [
             {
                 numbers: [
                     {n: 1, r: 2, c: 6}, {n: 2, r: 2, c: 5}, {n: 3, r: 5, c: 3},
@@ -547,7 +549,6 @@
                 ],
                 walls: []
             },
-            // Puzzle with walls
             {
                 numbers: [
                     {n: 1, r: 0, c: 0}, {n: 2, r: 0, c: 3}, {n: 3, r: 2, c: 3},
@@ -562,51 +563,19 @@
                     {r: 3, c: 1, side: 'right'}, {r: 3, c: 2, side: 'left'},
                     {r: 5, c: 4, side: 'bottom'}, {r: 6, c: 4, side: 'top'}
                 ]
-            },
-            // Another puzzle with walls
-            {
-                numbers: [
-                    {n: 1, r: 0, c: 4}, {n: 2, r: 2, c: 4}, {n: 3, r: 2, c: 2},
-                    {n: 4, r: 0, c: 2}, {n: 5, r: 0, c: 0}, {n: 6, r: 2, c: 0},
-                    {n: 7, r: 4, c: 0}, {n: 8, r: 4, c: 2}, {n: 9, r: 6, c: 2},
-                    {n: 10, r: 6, c: 0}, {n: 11, r: 7, c: 3}, {n: 12, r: 5, c: 4},
-                    {n: 13, r: 3, c: 5}, {n: 14, r: 1, c: 6}, {n: 15, r: 3, c: 7},
-                    {n: 16, r: 5, c: 7}, {n: 17, r: 7, c: 6}, {n: 18, r: 7, c: 4}
-                ],
-                walls: [
-                    {r: 1, c: 1, side: 'bottom'}, {r: 2, c: 1, side: 'top'},
-                    {r: 3, c: 3, side: 'right'}, {r: 3, c: 4, side: 'left'},
-                    {r: 4, c: 5, side: 'bottom'}, {r: 5, c: 5, side: 'top'},
-                    {r: 6, c: 6, side: 'left'}, {r: 6, c: 5, side: 'right'}
-                ]
-            },
-            // Maze-like puzzle
-            {
-                numbers: [
-                    {n: 1, r: 3, c: 3}, {n: 2, r: 3, c: 4}, {n: 3, r: 1, c: 4},
-                    {n: 4, r: 1, c: 6}, {n: 5, r: 3, c: 6}, {n: 6, r: 5, c: 6},
-                    {n: 7, r: 5, c: 4}, {n: 8, r: 7, c: 4}, {n: 9, r: 7, c: 2},
-                    {n: 10, r: 5, c: 2}, {n: 11, r: 5, c: 0}, {n: 12, r: 3, c: 0},
-                    {n: 13, r: 1, c: 0}, {n: 14, r: 1, c: 2}, {n: 15, r: 0, c: 4},
-                    {n: 16, r: 0, c: 7}, {n: 17, r: 2, c: 7}, {n: 18, r: 4, c: 7},
-                    {n: 19, r: 6, c: 7}, {n: 20, r: 7, c: 7}
-                ],
-                walls: [
-                    {r: 2, c: 2, side: 'bottom'}, {r: 3, c: 2, side: 'top'},
-                    {r: 2, c: 5, side: 'bottom'}, {r: 3, c: 5, side: 'top'},
-                    {r: 4, c: 1, side: 'right'}, {r: 4, c: 2, side: 'left'},
-                    {r: 6, c: 3, side: 'right'}, {r: 6, c: 4, side: 'left'}
-                ]
             }
         ];
 
-        let currentPuzzle = 0;
+        // Global State
+        let currentLevelData = null; 
+        let currentBuiltInIndex = 0;
         let grid = [];
         let path = [];
-        let numbers = {};
-        let maxNumber = 0;
         let isDragging = false;
         let totalCells = 64;
+        let maxNumber = 0;
+
+        // --- GAME LOGIC ---
 
         function initGrid() {
             const gridEl = document.getElementById('grid');
@@ -625,23 +594,21 @@
                         element: cell,
                         number: null,
                         inPath: false,
-                        connectors: [],
                         walls: []
                     };
                 }
             }
         }
 
-        function loadPuzzle(puzzleIndex) {
+        function loadLevelData(puzzleData) {
+            currentLevelData = puzzleData;
             initGrid();
             path = [];
-            numbers = {};
             
-            const puzzle = puzzles[puzzleIndex];
-            maxNumber = Math.max(...puzzle.numbers.map(p => p.n));
+            maxNumber = Math.max(...puzzleData.numbers.map(p => p.n));
             
             // Add numbers
-            puzzle.numbers.forEach(({n, r, c}) => {
+            puzzleData.numbers.forEach(({n, r, c}) => {
                 const cell = grid[r][c];
                 const numberEl = document.createElement('div');
                 numberEl.className = 'number';
@@ -649,12 +616,11 @@
                 cell.element.appendChild(numberEl);
                 cell.number = n;
                 cell.numberEl = numberEl;
-                numbers[n] = {row: r, col: c};
             });
 
             // Add walls
-            if (puzzle.walls) {
-                puzzle.walls.forEach(({r, c, side}) => {
+            if (puzzleData.walls) {
+                puzzleData.walls.forEach(({r, c, side}) => {
                     const cell = grid[r][c];
                     cell.element.classList.add(`wall-${side}`);
                     if (!cell.walls) cell.walls = [];
@@ -666,27 +632,31 @@
             setupEventListeners();
         }
 
+        function loadNextBuiltIn() {
+            currentBuiltInIndex = (currentBuiltInIndex + 1) % builtInPuzzles.length;
+            loadLevelData(builtInPuzzles[currentBuiltInIndex]);
+            hideMessage();
+        }
+
+        function resetPuzzle() {
+            if (currentLevelData) {
+                loadLevelData(currentLevelData);
+            }
+        }
+
         function setupEventListeners() {
             const gridEl = document.getElementById('grid');
+            const newGridEl = gridEl.cloneNode(true);
+            gridEl.parentNode.replaceChild(newGridEl, gridEl);
             
-            // Remove old listeners
-            gridEl.replaceWith(gridEl.cloneNode(true));
-            const newGridEl = document.getElementById('grid');
-            
-            // Rebuild grid references
             const cells = newGridEl.querySelectorAll('.cell');
             cells.forEach((cell, idx) => {
                 const r = Math.floor(idx / 8);
                 const c = idx % 8;
                 grid[r][c].element = cell;
-                
-                // Re-link existing number element if exists
                 const numberEl = cell.querySelector('.number');
-                if (numberEl) {
-                    grid[r][c].numberEl = numberEl;
-                }
+                if (numberEl) grid[r][c].numberEl = numberEl;
                 
-                // Re-link wall data from class names
                 grid[r][c].walls = [];
                 if (cell.classList.contains('wall-top')) grid[r][c].walls.push('top');
                 if (cell.classList.contains('wall-bottom')) grid[r][c].walls.push('bottom');
@@ -694,32 +664,20 @@
                 if (cell.classList.contains('wall-right')) grid[r][c].walls.push('right');
             });
 
-            // Mouse events
             newGridEl.addEventListener('mousedown', handleStart);
             newGridEl.addEventListener('mousemove', handleMove);
             document.addEventListener('mouseup', handleEnd);
-
-            // Touch events
             newGridEl.addEventListener('touchstart', handleStart, {passive: false});
             newGridEl.addEventListener('touchmove', handleMove, {passive: false});
             document.addEventListener('touchend', handleEnd);
         }
 
         function getCellFromEvent(e) {
-            let target;
-            if (e.touches) {
-                const touch = e.touches[0];
-                target = document.elementFromPoint(touch.clientX, touch.clientY);
-            } else {
-                target = e.target;
-            }
-            
+            let target = e.touches ? document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY) : e.target;
             while (target && !target.classList.contains('cell')) {
                 target = target.parentElement;
             }
-            
             if (!target || !target.dataset.row) return null;
-            
             const r = parseInt(target.dataset.row);
             const c = parseInt(target.dataset.col);
             return {r, c, cell: grid[r][c]};
@@ -727,39 +685,27 @@
 
         function handleStart(e) {
             e.preventDefault();
-            const cellData = getCellFromEvent(e);
-            if (!cellData) return;
-
-            const {r, c, cell} = cellData;
+            const data = getCellFromEvent(e);
+            if (!data) return;
+            const {r, c, cell} = data;
             
-            // Must start at number 1 or continue from current position
             if (path.length === 0) {
-                if (cell.number === 1) {
-                    startPath(r, c);
-                }
+                if (cell.number === 1) startPath(r, c);
             } else {
-                // Check if clicking on current head to continue
                 const head = path[path.length - 1];
-                if (head.r === r && head.c === c) {
-                    isDragging = true;
-                }
+                if (head.r === r && head.c === c) isDragging = true;
             }
         }
 
         function handleMove(e) {
             if (!isDragging) return;
             e.preventDefault();
-            
-            const cellData = getCellFromEvent(e);
-            if (!cellData) return;
-
-            const {r, c, cell} = cellData;
-            extendPath(r, c);
+            const data = getCellFromEvent(e);
+            if (!data) return;
+            extendPath(data.r, data.c);
         }
 
-        function handleEnd(e) {
-            isDragging = false;
-        }
+        function handleEnd() { isDragging = false; }
 
         function startPath(r, c) {
             path = [{r, c}];
@@ -770,96 +716,50 @@
         function isAdjacent(r1, c1, r2, c2) {
             const dr = Math.abs(r1 - r2);
             const dc = Math.abs(c1 - c2);
-            if (!((dr === 1 && dc === 0) || (dr === 0 && dc === 1))) {
-                return false;
-            }
+            if (!((dr === 1 && dc === 0) || (dr === 0 && dc === 1))) return false;
             
-            // Check for walls blocking the path
-            const fromCell = grid[r1][c1];
-            const toCell = grid[r2][c2];
+            const from = grid[r1][c1];
+            const to = grid[r2][c2];
             
-            // Determine direction and check walls
-            if (r2 < r1) {
-                // Moving up
-                if (fromCell.walls.includes('top') || toCell.walls.includes('bottom')) {
-                    return false;
-                }
-            } else if (r2 > r1) {
-                // Moving down
-                if (fromCell.walls.includes('bottom') || toCell.walls.includes('top')) {
-                    return false;
-                }
-            } else if (c2 < c1) {
-                // Moving left
-                if (fromCell.walls.includes('left') || toCell.walls.includes('right')) {
-                    return false;
-                }
-            } else if (c2 > c1) {
-                // Moving right
-                if (fromCell.walls.includes('right') || toCell.walls.includes('left')) {
-                    return false;
-                }
-            }
+            if (r2 < r1 && (from.walls.includes('top') || to.walls.includes('bottom'))) return false;
+            if (r2 > r1 && (from.walls.includes('bottom') || to.walls.includes('top'))) return false;
+            if (c2 < c1 && (from.walls.includes('left') || to.walls.includes('right'))) return false;
+            if (c2 > c1 && (from.walls.includes('right') || to.walls.includes('left'))) return false;
             
             return true;
         }
 
         function extendPath(r, c) {
             if (path.length === 0) return;
-            
             const head = path[path.length - 1];
-            
-            // Already at this position
             if (head.r === r && head.c === c) return;
-            
-            // Not adjacent
             if (!isAdjacent(head.r, head.c, r, c)) return;
             
-            // Already in path (not allowing backtrack for now)
             const existingIdx = path.findIndex(p => p.r === r && p.c === c);
             if (existingIdx !== -1) {
-                // Backtrack to this position
                 path = path.slice(0, existingIdx + 1);
                 updateGridDisplay();
                 return;
             }
             
             const cell = grid[r][c];
-            
-            // Check if this cell has a number
             if (cell.number !== null) {
-                // Must be the next number in sequence
-                const currentNumbers = path
-                    .map(p => grid[p.r][p.c].number)
-                    .filter(n => n !== null);
+                const currentNumbers = path.map(p => grid[p.r][p.c].number).filter(n => n !== null);
                 const lastNumber = currentNumbers.length > 0 ? Math.max(...currentNumbers) : 0;
-                
-                if (cell.number !== lastNumber + 1) {
-                    return; // Can't visit this number yet
-                }
+                if (cell.number !== lastNumber + 1) return;
             }
             
             path.push({r, c});
             updateGridDisplay();
             
-            // Check win condition
             if (path.length === totalCells) {
-                // Verify all numbers were visited in order
-                const numbersInPath = path
-                    .map(p => grid[p.r][p.c].number)
-                    .filter(n => n !== null);
-                
+                const numbersInPath = path.map(p => grid[p.r][p.c].number).filter(n => n !== null);
                 if (numbersInPath.length === maxNumber) {
                     let inOrder = true;
                     for (let i = 0; i < numbersInPath.length - 1; i++) {
-                        if (numbersInPath[i] >= numbersInPath[i + 1]) {
-                            inOrder = false;
-                            break;
-                        }
+                        if (numbersInPath[i] >= numbersInPath[i + 1]) { inOrder = false; break; }
                     }
-                    if (inOrder) {
-                        setTimeout(showWinMessage, 300);
-                    }
+                    if (inOrder) setTimeout(showWinMessage, 300);
                 }
             }
         }
@@ -872,43 +772,31 @@
             return null;
         }
 
+        function opposite(dir) {
+            return {up: 'down', down: 'up', left: 'right', right: 'left'}[dir];
+        }
+
         function updateGridDisplay() {
-            // Clear all cells
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const cell = grid[r][c];
                     cell.element.classList.remove('filled', 'path', 'current');
-                    cell.inPath = false;
-                    
-                    // Remove connectors
                     cell.element.querySelectorAll('.connector').forEach(el => el.remove());
-                    
-                    // Reset number styling
-                    if (cell.numberEl) {
-                        cell.numberEl.classList.remove('active', 'completed');
-                    }
+                    if (cell.numberEl) cell.numberEl.classList.remove('active', 'completed');
                 }
             }
-            
-            // Mark path cells and add connectors
             for (let i = 0; i < path.length; i++) {
                 const {r, c} = path[i];
                 const cell = grid[r][c];
-                cell.inPath = true;
                 
                 if (i === path.length - 1) {
                     cell.element.classList.add('current');
-                    if (cell.numberEl) {
-                        cell.numberEl.classList.add('active');
-                    }
+                    if (cell.numberEl) cell.numberEl.classList.add('active');
                 } else {
                     cell.element.classList.add('path');
-                    if (cell.numberEl) {
-                        cell.numberEl.classList.add('completed');
-                    }
+                    if (cell.numberEl) cell.numberEl.classList.add('completed');
                 }
                 
-                // Add connectors
                 if (i > 0) {
                     const prev = path[i - 1];
                     const dir = getDirection(prev, path[i]);
@@ -916,28 +804,18 @@
                     addConnector(r, c, opposite(dir));
                 }
             }
-            
             updateStatus();
         }
 
-        function opposite(dir) {
-            const opposites = {up: 'down', down: 'up', left: 'right', right: 'left'};
-            return opposites[dir];
-        }
-
         function addConnector(r, c, direction) {
-            const cell = grid[r][c];
             const connector = document.createElement('div');
-            connector.className = `connector ${direction === 'left' || direction === 'right' ? 'horizontal' : 'vertical'} ${direction}`;
-            cell.element.appendChild(connector);
+            connector.className = `connector ${['left','right'].includes(direction) ? 'horizontal' : 'vertical'} ${direction}`;
+            grid[r][c].element.appendChild(connector);
         }
 
         function updateStatus() {
             document.getElementById('progress').textContent = `${path.length}/${totalCells}`;
-            
-            const numbersInPath = path
-                .map(p => grid[p.r][p.c].number)
-                .filter(n => n !== null);
+            const numbersInPath = path.map(p => grid[p.r][p.c].number).filter(n => n !== null);
             const nextNum = numbersInPath.length > 0 ? Math.max(...numbersInPath) + 1 : 1;
             document.getElementById('next-number').textContent = nextNum <= maxNumber ? nextNum : '✓';
         }
@@ -952,49 +830,26 @@
             document.getElementById('message').classList.remove('show');
         }
 
-        function resetPuzzle() {
-            path = [];
-            isDragging = false;
-            updateGridDisplay();
-        }
-
-        function newPuzzle() {
-            currentPuzzle = (currentPuzzle + 1) % puzzles.length;
-            loadPuzzle(currentPuzzle);
-            hideMessage();
-        }
-
-        // Initialize
-        loadPuzzle(0);
-
-        // Prevent scrolling on touch devices
-        document.body.addEventListener('touchmove', (e) => {
-            if (isDragging) e.preventDefault();
-        }, {passive: false});
-
-        // ========== LEVEL CREATOR ==========
-        let creatorGrid = [];
-        let creatorNumbers = [];
-        let creatorWalls = [];
-        let nextCreatorNumber = 1;
-
+        // --- MODE MANAGEMENT ---
         function setMode(mode) {
             document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.mode-btn[onclick="setMode('${mode}')"]`).classList.add('active');
             
             document.getElementById('game-mode').classList.toggle('active', mode === 'play');
             document.getElementById('create-mode').classList.toggle('active', mode === 'create');
+            document.getElementById('archive-mode').classList.toggle('active', mode === 'archive');
             
-            if (mode === 'create') {
-                initCreatorGrid();
-            }
+            if (mode === 'create') initCreatorGrid();
+            if (mode === 'archive') renderArchive();
         }
+
+        // --- CREATOR LOGIC ---
+        let creatorGrid = [], creatorNumbers = [], creatorWalls = [], nextCreatorNumber = 1;
 
         function initCreatorGrid() {
             const gridEl = document.getElementById('creator-grid');
             gridEl.innerHTML = '';
             creatorGrid = [];
-            
             for (let r = 0; r < 8; r++) {
                 creatorGrid[r] = [];
                 for (let c = 0; c < 8; c++) {
@@ -1003,60 +858,34 @@
                     cell.dataset.row = r;
                     cell.dataset.col = c;
                     
-                    // Add edge zones for wall placement
                     ['top', 'bottom', 'left', 'right'].forEach(side => {
                         const edge = document.createElement('div');
                         edge.className = `edge-zone ${side}`;
-                        edge.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            toggleWall(r, c, side);
-                        });
+                        edge.onclick = (e) => { e.stopPropagation(); toggleWall(r, c, side); };
                         cell.appendChild(edge);
                     });
                     
-                    // Center click for numbers
-                    cell.addEventListener('click', (e) => {
-                        if (!e.target.classList.contains('edge-zone')) {
-                            placeNumber(r, c);
-                        }
-                    });
-                    
-                    // Right-click to remove number
-                    cell.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        removeNumber(r, c);
-                    });
+                    cell.onclick = (e) => { if (!e.target.classList.contains('edge-zone')) placeNumber(r, c); };
+                    cell.oncontextmenu = (e) => { e.preventDefault(); removeNumber(r, c); };
                     
                     gridEl.appendChild(cell);
-                    creatorGrid[r][c] = {
-                        element: cell,
-                        number: null,
-                        numberEl: null,
-                        walls: []
-                    };
+                    creatorGrid[r][c] = { element: cell, number: null, numberEl: null, walls: [] };
                 }
             }
-            
-            // Restore existing state if any
             renderCreatorState();
         }
 
         function placeNumber(r, c) {
             const cell = creatorGrid[r][c];
-            
-            // If cell already has a number, don't place another
             if (cell.number !== null) return;
             
-            // Create number element
             const numberEl = document.createElement('div');
             numberEl.className = 'number';
             numberEl.textContent = nextCreatorNumber;
             cell.element.appendChild(numberEl);
-            
             cell.number = nextCreatorNumber;
             cell.numberEl = numberEl;
             creatorNumbers.push({n: nextCreatorNumber, r, c});
-            
             nextCreatorNumber++;
             updateOutput();
         }
@@ -1064,169 +893,179 @@
         function removeNumber(r, c) {
             const cell = creatorGrid[r][c];
             if (cell.number === null) return;
-            
-            const removedNumber = cell.number;
-            
-            // Remove the number element
-            if (cell.numberEl) {
-                cell.numberEl.remove();
-            }
+            const removed = cell.number;
+            if (cell.numberEl) cell.numberEl.remove();
             cell.number = null;
             cell.numberEl = null;
-            
-            // Remove from array
             creatorNumbers = creatorNumbers.filter(n => !(n.r === r && n.c === c));
-            
-            // Renumber all numbers higher than the removed one
-            creatorNumbers.forEach(numData => {
-                if (numData.n > removedNumber) {
-                    numData.n--;
-                    const cell = creatorGrid[numData.r][numData.c];
-                    if (cell.numberEl) {
-                        cell.numberEl.textContent = numData.n;
-                    }
-                    cell.number = numData.n;
+            creatorNumbers.forEach(n => {
+                if (n.n > removed) {
+                    n.n--;
+                    creatorGrid[n.r][n.c].number = n.n;
+                    if (creatorGrid[n.r][n.c].numberEl) creatorGrid[n.r][n.c].numberEl.textContent = n.n;
                 }
             });
-            
             nextCreatorNumber--;
             updateOutput();
         }
 
         function undoLastNumber() {
-            if (creatorNumbers.length === 0) return;
-            
-            const last = creatorNumbers[creatorNumbers.length - 1];
-            removeNumber(last.r, last.c);
+            if (creatorNumbers.length > 0) {
+                const last = creatorNumbers[creatorNumbers.length - 1];
+                removeNumber(last.r, last.c);
+            }
         }
 
         function toggleWall(r, c, side) {
             const cell = creatorGrid[r][c];
-            const wallIndex = cell.walls.indexOf(side);
-            
-            if (wallIndex === -1) {
-                // Add wall
+            const idx = cell.walls.indexOf(side);
+            if (idx === -1) {
                 cell.walls.push(side);
                 cell.element.classList.add(`wall-${side}`);
-                
-                // Add to walls array (need both sides for the format)
                 creatorWalls.push({r, c, side});
-                
-                // Also add the opposite wall on the adjacent cell
-                const adjacent = getAdjacentCell(r, c, side);
-                if (adjacent) {
-                    const oppSide = opposite(side);
-                    const adjCell = creatorGrid[adjacent.r][adjacent.c];
-                    if (!adjCell.walls.includes(oppSide)) {
-                        adjCell.walls.push(oppSide);
-                        adjCell.element.classList.add(`wall-${oppSide}`);
-                        creatorWalls.push({r: adjacent.r, c: adjacent.c, side: oppSide});
+                // Add adjacent
+                const adj = getAdj(r, c, side);
+                if (adj) {
+                    const opp = opposite(side);
+                    const ac = creatorGrid[adj.r][adj.c];
+                    if (!ac.walls.includes(opp)) {
+                        ac.walls.push(opp);
+                        ac.element.classList.add(`wall-${opp}`);
+                        creatorWalls.push({r: adj.r, c: adj.c, side: opp});
                     }
                 }
             } else {
-                // Remove wall
-                cell.walls.splice(wallIndex, 1);
+                cell.walls.splice(idx, 1);
                 cell.element.classList.remove(`wall-${side}`);
                 creatorWalls = creatorWalls.filter(w => !(w.r === r && w.c === c && w.side === side));
-                
-                // Also remove the opposite wall on the adjacent cell
-                const adjacent = getAdjacentCell(r, c, side);
-                if (adjacent) {
-                    const oppSide = opposite(side);
-                    const adjCell = creatorGrid[adjacent.r][adjacent.c];
-                    const adjWallIndex = adjCell.walls.indexOf(oppSide);
-                    if (adjWallIndex !== -1) {
-                        adjCell.walls.splice(adjWallIndex, 1);
-                        adjCell.element.classList.remove(`wall-${oppSide}`);
-                        creatorWalls = creatorWalls.filter(w => !(w.r === adjacent.r && w.c === adjacent.c && w.side === oppSide));
+                // Remove adjacent
+                const adj = getAdj(r, c, side);
+                if (adj) {
+                    const opp = opposite(side);
+                    const ac = creatorGrid[adj.r][adj.c];
+                    const aidx = ac.walls.indexOf(opp);
+                    if (aidx !== -1) {
+                        ac.walls.splice(aidx, 1);
+                        ac.element.classList.remove(`wall-${opp}`);
+                        creatorWalls = creatorWalls.filter(w => !(w.r === adj.r && w.c === adj.c && w.side === opp));
                     }
                 }
             }
-            
             updateOutput();
         }
 
-        function getAdjacentCell(r, c, side) {
-            switch(side) {
-                case 'top': return r > 0 ? {r: r-1, c} : null;
-                case 'bottom': return r < 7 ? {r: r+1, c} : null;
-                case 'left': return c > 0 ? {r, c: c-1} : null;
-                case 'right': return c < 7 ? {r, c: c+1} : null;
-            }
+        function getAdj(r, c, side) {
+            if (side === 'top' && r > 0) return {r: r-1, c};
+            if (side === 'bottom' && r < 7) return {r: r+1, c};
+            if (side === 'left' && c > 0) return {r, c: c-1};
+            if (side === 'right' && c < 7) return {r, c: c+1};
             return null;
         }
 
         function updateOutput() {
-            const output = {
+            const out = {
                 numbers: creatorNumbers.map(n => ({n: n.n, r: n.r, c: n.c})),
                 walls: creatorWalls.map(w => ({r: w.r, c: w.c, side: w.side}))
             };
-            
-            document.getElementById('level-output').value = JSON.stringify(output, null, 2);
+            document.getElementById('level-output').value = JSON.stringify(out, null, 2);
         }
 
         function clearCreator() {
-            creatorNumbers = [];
-            creatorWalls = [];
-            nextCreatorNumber = 1;
+            creatorNumbers = []; creatorWalls = []; nextCreatorNumber = 1;
             initCreatorGrid();
-            updateOutput();
         }
 
         function renderCreatorState() {
-            // Re-render numbers
             creatorNumbers.forEach(({n, r, c}) => {
                 const cell = creatorGrid[r][c];
-                const numberEl = document.createElement('div');
-                numberEl.className = 'number';
-                numberEl.textContent = n;
-                cell.element.appendChild(numberEl);
-                cell.number = n;
-                cell.numberEl = numberEl;
+                const nel = document.createElement('div');
+                nel.className = 'number'; nel.textContent = n;
+                cell.element.appendChild(nel);
+                cell.number = n; cell.numberEl = nel;
             });
-            
-            // Re-render walls
             creatorWalls.forEach(({r, c, side}) => {
                 const cell = creatorGrid[r][c];
-                if (!cell.walls.includes(side)) {
-                    cell.walls.push(side);
-                }
+                if (!cell.walls.includes(side)) cell.walls.push(side);
                 cell.element.classList.add(`wall-${side}`);
             });
-            
             updateOutput();
         }
 
         function copyOutput() {
-            const textarea = document.getElementById('level-output');
-            textarea.select();
+            const txt = document.getElementById('level-output');
+            txt.select();
             document.execCommand('copy');
-            
-            // Visual feedback
-            const btn = document.querySelector('.btn-copy');
-            const originalText = btn.textContent;
-            btn.textContent = 'Copied!';
-            setTimeout(() => btn.textContent = originalText, 1500);
         }
 
         function testLevel() {
-            if (creatorNumbers.length < 2) {
-                alert('Please add at least 2 numbers to test the level.');
-                return;
-            }
-            
-            // Create a temporary puzzle from the creator state
-            const testPuzzle = {
+            if (creatorNumbers.length < 2) { alert('Need at least 2 numbers'); return; }
+            const testPuz = {
                 numbers: creatorNumbers.map(n => ({n: n.n, r: n.r, c: n.c})),
                 walls: creatorWalls.map(w => ({r: w.r, c: w.c, side: w.side}))
             };
-            
-            // Add to puzzles temporarily and switch to play mode
-            puzzles.unshift(testPuzzle);
-            currentPuzzle = 0;
-            loadPuzzle(0);
+            loadLevelData(testPuz);
             setMode('play');
         }
+
+        // --- ARCHIVE LOGIC ---
+
+        async function renderArchive() {
+            const gridEl = document.getElementById('archive-grid');
+            if (gridEl.children.length > 0) return; 
+
+            gridEl.innerHTML = '<p style="text-align:center; width:100%; color:#888;">Loading...</p>';
+
+            try {
+                // Fetch the master list of levels
+                const response = await fetch('archive/levels.json');
+                if (!response.ok) throw new Error('Could not find archive/levels.json');
+                
+                const levels = await response.json();
+                
+                // Sort descending (newest first)
+                levels.sort((a, b) => b - a);
+
+                gridEl.innerHTML = ''; // Clear loading text
+
+                if (levels.length === 0) {
+                    gridEl.innerHTML = '<p style="text-align:center; width:100%; color:#888;">No levels found in levels.json</p>';
+                }
+
+                levels.forEach(levelId => {
+                    const btn = document.createElement('button');
+                    btn.className = 'level-card';
+                    btn.textContent = levelId;
+                    btn.onclick = () => fetchAndLoadLevel(levelId);
+                    gridEl.appendChild(btn);
+                });
+
+            } catch (e) {
+                gridEl.innerHTML = `<p style="text-align:center; width:100%; color:#d32f2f;">
+                    <strong>Error:</strong> Could not load <code>archive/levels.json</code>.<br>
+                    Make sure you created the file and are running on a local server.
+                </p>`;
+                console.error(e);
+            }
+        }
+
+        async function fetchAndLoadLevel(levelId) {
+            try {
+                const response = await fetch(`archive/${levelId}.json`);
+                if (!response.ok) throw new Error(`Level ${levelId} not found.`);
+                
+                const data = await response.json();
+                
+                loadLevelData(data);
+                setMode('play');
+                
+            } catch (error) {
+                console.error(error);
+                alert(`Error loading level ${levelId}.\nCheck console for details.`);
+            }
+        }
+
+        // Initialize with default
+        loadLevelData(builtInPuzzles[0]);
     </script>
 </body>
 </html>
