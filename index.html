@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zip - Path Puzzle</title>
+    <title>Zip - Snake Path</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -16,12 +16,12 @@
             --bg: #f8f9fa;
             --grid-bg: #ffffff;
             --grid-border: #e0e0e0;
-            --cell-border: #d0d0d0;
+            --cell-border: #ebebeb; /* lighter border for cleaner look */
             --number-bg: #1a1a1a;
             --number-text: #ffffff;
             --path-start: #4a90d9;
             --path-end: #7c5ce7;
-            --path-fill: rgba(74, 144, 217, 0.25);
+            --path-thickness: 16px; /* Width of the snake body */
             --success: #00c853;
         }
 
@@ -103,34 +103,74 @@
             transition: background-color 0.15s ease;
         }
 
+        /* --- SNAKE STYLING START --- */
+
+        /* Remove the old full-square background */
         .cell.filled {
-            background: var(--path-fill);
+            background: transparent; 
         }
 
-        .cell.wall-top {
-            border-top: 3px solid #1a1a1a;
+        .cell.path, .cell.current {
+            background: transparent;
+            box-shadow: none;
         }
 
-        .cell.wall-bottom {
-            border-bottom: 3px solid #1a1a1a;
-        }
-
-        .cell.wall-left {
-            border-left: 3px solid #1a1a1a;
-        }
-
-        .cell.wall-right {
-            border-right: 3px solid #1a1a1a;
-        }
-
-        .cell.path {
+        /* The "Joint" - A circle in the center of every path cell to round the corners */
+        .cell.path::before, .cell.current::before {
+            content: '';
+            position: absolute;
+            width: var(--path-thickness);
+            height: var(--path-thickness);
             background: linear-gradient(135deg, var(--path-start), var(--path-end));
+            border-radius: 50%;
+            z-index: 5; /* Below numbers (10) but above connectors (4) */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
-        .cell.current {
-            background: linear-gradient(135deg, var(--path-start), var(--path-end));
-            box-shadow: inset 0 0 0 3px rgba(255,255,255,0.4);
+        /* The "Head" - Special styling for the current leading cell */
+        .cell.current::before {
+            transform: translate(-50%, -50%) scale(1.4);
+            box-shadow: 0 0 10px rgba(124, 92, 231, 0.5);
+            z-index: 6;
         }
+
+        /* Path connectors (The Body) */
+        .connector {
+            position: absolute;
+            background: linear-gradient(135deg, var(--path-start), var(--path-end));
+            z-index: 4; /* Below joints */
+            pointer-events: none;
+        }
+
+        /* Update connector dimensions to be thin lines */
+        .connector.horizontal {
+            height: var(--path-thickness);
+            width: calc(50% + 2px); /* +2px ensures overlap with center joint */
+            top: 50%;
+            margin-top: calc(var(--path-thickness) / -2);
+        }
+
+        .connector.vertical {
+            width: var(--path-thickness);
+            height: calc(50% + 2px); /* +2px ensures overlap with center joint */
+            left: 50%;
+            margin-left: calc(var(--path-thickness) / -2);
+        }
+
+        /* Positioning logic for connectors */
+        .connector.right { left: 50%; }
+        .connector.left { right: 50%; left: auto; }
+        .connector.down { top: 50%; }
+        .connector.up { bottom: 50%; top: auto; }
+
+        /* --- SNAKE STYLING END --- */
+
+        .cell.wall-top { border-top: 3px solid #1a1a1a; }
+        .cell.wall-bottom { border-bottom: 3px solid #1a1a1a; }
+        .cell.wall-left { border-left: 3px solid #1a1a1a; }
+        .cell.wall-right { border-right: 3px solid #1a1a1a; }
 
         .number {
             width: 36px;
@@ -144,63 +184,18 @@
             font-family: 'DM Sans', sans-serif;
             font-weight: 700;
             font-size: 14px;
-            z-index: 10;
+            z-index: 10; /* Must be above the snake body */
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
         }
 
         .number.active {
-            transform: scale(1.1);
+            transform: scale(1.15);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .number.completed {
             background: linear-gradient(135deg, var(--path-start), var(--path-end));
-        }
-
-        /* Path connectors */
-        .connector {
-            position: absolute;
-            background: linear-gradient(135deg, var(--path-start), var(--path-end));
-            z-index: 5;
-            pointer-events: none;
-        }
-
-        .connector.horizontal {
-            height: 20px;
-            width: calc(100% + 2px);
-            top: 50%;
-            left: -1px;
-            transform: translateY(-50%);
-        }
-
-        .connector.vertical {
-            width: 20px;
-            height: calc(100% + 2px);
-            left: 50%;
-            top: -1px;
-            transform: translateX(-50%);
-        }
-
-        .connector.right {
-            left: 50%;
-            width: calc(50% + 1px);
-        }
-
-        .connector.left {
-            right: 50%;
-            left: auto;
-            width: calc(50% + 1px);
-        }
-
-        .connector.down {
-            top: 50%;
-            height: calc(50% + 1px);
-        }
-
-        .connector.up {
-            bottom: 50%;
-            top: auto;
-            height: calc(50% + 1px);
         }
 
         .status-bar {
@@ -338,179 +333,6 @@
         }
 
         .mode-btn {
-            flex: 1;
-            padding: 10px 20px;
-            border: none;
-            background: transparent;
-            border-radius: 8px;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 500;
-            font-size: 0.95rem;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .mode-btn.active {
-            background: linear-gradient(135deg, var(--path-start), var(--path-end));
-            color: white;
-        }
-
-        .mode-btn:hover:not(.active) {
-            background: #f5f5f5;
-        }
-
-        .creator-controls {
-            display: none;
-            flex-direction: column;
-            gap: 12px;
-            width: 100%;
-            max-width: 440px;
-        }
-
-        .creator-controls.active {
-            display: flex;
-        }
-
-        .game-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .game-controls.hidden {
-            display: none;
-        }
-
-        .creator-instructions {
-            background: white;
-            padding: 16px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .creator-instructions h3 {
-            font-size: 0.9rem;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .creator-instructions ul {
-            list-style: none;
-            font-size: 0.85rem;
-            color: #666;
-        }
-
-        .creator-instructions li {
-            padding: 4px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-
-        .creator-instructions li::before {
-            content: "•";
-            position: absolute;
-            left: 6px;
-            color: var(--path-start);
-        }
-
-        .output-area {
-            width: 100%;
-        }
-
-        .output-area label {
-            display: block;
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 6px;
-        }
-
-        .output-area textarea {
-            width: 100%;
-            height: 120px;
-            padding: 12px;
-            border: 2px solid var(--grid-border);
-            border-radius: 8px;
-            font-family: 'Space Mono', monospace;
-            font-size: 0.75rem;
-            resize: vertical;
-            background: #fafafa;
-        }
-
-        .output-area textarea:focus {
-            outline: none;
-            border-color: var(--path-start);
-        }
-
-        .creator-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .creator-buttons button {
-            flex: 1;
-        }
-
-        .btn-clear {
-            background: #ff6b6b;
-            color: white;
-        }
-
-        .btn-clear:hover {
-            background: #ee5a5a;
-        }
-
-        .btn-copy {
-            background: white;
-            color: #333;
-            border: 2px solid var(--grid-border);
-        }
-
-        .btn-copy:hover {
-            background: #f5f5f5;
-            border-color: #ccc;
-        }
-
-        .btn-load {
-            background: linear-gradient(135deg, var(--path-start), var(--path-end));
-            color: white;
-        }
-
-        .cell.edge-highlight-top {
-            box-shadow: inset 0 3px 0 0 rgba(26, 26, 26, 0.4);
-        }
-
-        .cell.edge-highlight-bottom {
-            box-shadow: inset 0 -3px 0 0 rgba(26, 26, 26, 0.4);
-        }
-
-        .cell.edge-highlight-left {
-            box-shadow: inset 3px 0 0 0 rgba(26, 26, 26, 0.4);
-        }
-
-        .cell.edge-highlight-right {
-            box-shadow: inset -3px 0 0 0 rgba(26, 26, 26, 0.4);
-        }
-
-        .creator-mode .cell {
-            cursor: crosshair;
-        }
-
-        .creator-mode .cell:hover {
-            background: rgba(74, 144, 217, 0.1);
-        }
-
-        /* Mode Toggle */
-        .mode-toggle {
-            display: flex;
-            background: white;
-            border-radius: 12px;
-            padding: 4px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .mode-btn {
             font-family: 'DM Sans', sans-serif;
             font-weight: 500;
             font-size: 0.9rem;
@@ -532,7 +354,15 @@
             background: #f5f5f5;
         }
 
-        /* Creator specific styles */
+        .creator-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 440px;
+        }
+
         .creator-container {
             display: none;
             flex-direction: column;
@@ -559,66 +389,21 @@
             cursor: pointer;
         }
 
-        .creator-cell.wall-top {
-            border-top: 3px solid #1a1a1a;
-        }
-
-        .creator-cell.wall-bottom {
-            border-bottom: 3px solid #1a1a1a;
-        }
-
-        .creator-cell.wall-left {
-            border-left: 3px solid #1a1a1a;
-        }
-
-        .creator-cell.wall-right {
-            border-right: 3px solid #1a1a1a;
-        }
-
-        .creator-cell:hover {
-            background: rgba(74, 144, 217, 0.1);
-        }
+        .creator-cell.wall-top { border-top: 3px solid #1a1a1a; }
+        .creator-cell.wall-bottom { border-bottom: 3px solid #1a1a1a; }
+        .creator-cell.wall-left { border-left: 3px solid #1a1a1a; }
+        .creator-cell.wall-right { border-right: 3px solid #1a1a1a; }
 
         .creator-cell .edge-zone {
             position: absolute;
             z-index: 5;
         }
 
-        .creator-cell .edge-zone.top {
-            top: 0;
-            left: 8px;
-            right: 8px;
-            height: 8px;
-            cursor: n-resize;
-        }
-
-        .creator-cell .edge-zone.bottom {
-            bottom: 0;
-            left: 8px;
-            right: 8px;
-            height: 8px;
-            cursor: s-resize;
-        }
-
-        .creator-cell .edge-zone.left {
-            left: 0;
-            top: 8px;
-            bottom: 8px;
-            width: 8px;
-            cursor: w-resize;
-        }
-
-        .creator-cell .edge-zone.right {
-            right: 0;
-            top: 8px;
-            bottom: 8px;
-            width: 8px;
-            cursor: e-resize;
-        }
-
-        .creator-cell .edge-zone:hover {
-            background: rgba(26, 26, 26, 0.3);
-        }
+        .creator-cell .edge-zone.top { top: 0; left: 8px; right: 8px; height: 8px; cursor: n-resize; }
+        .creator-cell .edge-zone.bottom { bottom: 0; left: 8px; right: 8px; height: 8px; cursor: s-resize; }
+        .creator-cell .edge-zone.left { left: 0; top: 8px; bottom: 8px; width: 8px; cursor: w-resize; }
+        .creator-cell .edge-zone.right { right: 0; top: 8px; bottom: 8px; width: 8px; cursor: e-resize; }
+        .creator-cell .edge-zone:hover { background: rgba(26, 26, 26, 0.3); }
 
         .output-area {
             width: 100%;
@@ -648,40 +433,12 @@
             border-color: var(--path-start);
         }
 
-        .creator-controls {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .btn-clear {
-            background: #ff6b6b;
-            color: white;
-        }
-
-        .btn-clear:hover {
-            background: #ee5a5a;
-        }
-
-        .btn-copy {
-            background: var(--number-bg);
-            color: white;
-        }
-
-        .btn-copy:hover {
-            background: #333;
-        }
-
-        .btn-test {
-            background: linear-gradient(135deg, var(--path-start), var(--path-end));
-            color: white;
-        }
-
-        .btn-test:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(74, 144, 217, 0.35);
-        }
+        .btn-clear { background: #ff6b6b; color: white; }
+        .btn-clear:hover { background: #ee5a5a; }
+        .btn-copy { background: var(--number-bg); color: white; }
+        .btn-copy:hover { background: #333; }
+        .btn-test { background: linear-gradient(135deg, var(--path-start), var(--path-end)); color: white; }
+        .btn-test:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 144, 217, 0.35); }
 
         .creator-instructions {
             max-width: 400px;
@@ -691,34 +448,14 @@
             line-height: 1.6;
         }
 
-        .creator-instructions strong {
-            color: #555;
-        }
+        .creator-instructions strong { color: #555; }
 
         @media (max-width: 500px) {
-            .cell {
-                width: 42px;
-                height: 42px;
-            }
-            
-            .number {
-                width: 30px;
-                height: 30px;
-                font-size: 12px;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            .controls {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            button {
-                width: 100%;
-            }
+            .cell, .creator-cell { width: 42px; height: 42px; }
+            .number { width: 30px; height: 30px; font-size: 12px; }
+            h1 { font-size: 2rem; }
+            .controls { flex-direction: column; width: 100%; }
+            button { width: 100%; }
         }
     </style>
 </head>
@@ -794,8 +531,7 @@
     </div>
 
     <script>
-        // Puzzle definitions - each puzzle has numbers and optional walls
-        // Walls are defined as {r, c, side} where side is 'top', 'bottom', 'left', or 'right'
+        // Puzzle definitions
         const puzzles = [
             // Puzzle from the screenshot
             {
@@ -1240,7 +976,7 @@
         let creatorGrid = [];
         let creatorNumbers = [];
         let creatorWalls = [];
-        let nextNumber = 1;
+        let nextCreatorNumber = 1;
 
         function setMode(mode) {
             document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
@@ -1314,14 +1050,14 @@
             // Create number element
             const numberEl = document.createElement('div');
             numberEl.className = 'number';
-            numberEl.textContent = nextNumber;
+            numberEl.textContent = nextCreatorNumber;
             cell.element.appendChild(numberEl);
             
-            cell.number = nextNumber;
+            cell.number = nextCreatorNumber;
             cell.numberEl = numberEl;
-            creatorNumbers.push({n: nextNumber, r, c});
+            creatorNumbers.push({n: nextCreatorNumber, r, c});
             
-            nextNumber++;
+            nextCreatorNumber++;
             updateOutput();
         }
 
@@ -1353,7 +1089,7 @@
                 }
             });
             
-            nextNumber--;
+            nextCreatorNumber--;
             updateOutput();
         }
 
@@ -1432,7 +1168,7 @@
         function clearCreator() {
             creatorNumbers = [];
             creatorWalls = [];
-            nextNumber = 1;
+            nextCreatorNumber = 1;
             initCreatorGrid();
             updateOutput();
         }
