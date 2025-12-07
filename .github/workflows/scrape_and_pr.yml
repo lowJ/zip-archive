@@ -3,7 +3,7 @@ name: Scrape and Create PR
 on:
   workflow_dispatch: # Allows manual triggering from the Actions tab
   schedule:
-    - cron: '0 9 * * *' # 9:00 UTC
+    - cron: '2 8 * * *' # 8:02 UTC (0:02 PST or 1:02 PST if daylight savings)
 
 jobs:
   run-scraper:
