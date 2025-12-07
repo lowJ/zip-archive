@@ -690,11 +690,32 @@
             // Add walls
             if (puzzleData.walls) {
                 puzzleData.walls.forEach(({r, c, side}) => {
+                    // 1. Add to the defined cell (Self)
                     if (r < h && c < w) {
                         const cell = grid[r][c];
-                        cell.element.classList.add(`wall-${side}`);
-                        if (!cell.walls) cell.walls = [];
-                        cell.walls.push(side);
+                        if (!cell.walls.includes(side)) {
+                            cell.element.classList.add(`wall-${side}`);
+                            cell.walls.push(side);
+                        }
+
+                        // 2. Infer and add to the adjacent cell (Neighbor)
+                        let nr = r, nc = c;
+                        if (side === 'top') nr--;
+                        else if (side === 'bottom') nr++;
+                        else if (side === 'left') nc--;
+                        else if (side === 'right') nc++;
+
+                        // Check if neighbor is within bounds
+                        if (nr >= 0 && nr < h && nc >= 0 && nc < w) {
+                            const neighbor = grid[nr][nc];
+                            const oppSide = opposite(side);
+                            
+                            // Apply to neighbor if not already present
+                            if (oppSide && !neighbor.walls.includes(oppSide)) {
+                                neighbor.element.classList.add(`wall-${oppSide}`);
+                                neighbor.walls.push(oppSide);
+                            }
+                        }
                     }
                 });
             }
@@ -848,7 +869,15 @@
         }
 
         function opposite(dir) {
-            return {up: 'down', down: 'up', left: 'right', right: 'left'}[dir];
+            const map = {
+                up: 'down', 
+                down: 'up', 
+                left: 'right', 
+                right: 'left',
+                top: 'bottom',
+                bottom: 'top'
+            };
+            return map[dir];
         }
 
         function updateGridDisplay() {
