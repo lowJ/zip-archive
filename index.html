@@ -134,6 +134,29 @@
             fill: white;
         }
 
+        .btn-icon.btn-nav {
+            background: white;
+        }
+
+        .btn-icon.btn-nav:hover {
+            background: #f0f0f0;
+            border-color: #bbb;
+        }
+
+        .btn-icon.btn-nav .icon-svg {
+            fill: #555;
+        }
+
+        .btn-icon.btn-nav:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-icon.btn-nav:disabled:hover {
+            background: white;
+            border-color: var(--grid-border);
+        }
+
         .grid-wrapper {
             background: var(--grid-bg);
             border-radius: 16px;
@@ -325,9 +348,21 @@
 
         .success-controls {
             display: flex;
-            gap: 12px;
-            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
             margin-top: 24px;
+        }
+
+        .success-controls .nav-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .success-controls .action-row {
+            display: flex;
+            gap: 12px;
         }
 
         .overlay {
@@ -552,9 +587,19 @@
                     </svg>
                 </button>
                 <div id="timer" class="timer">00:00</div>
+                <button class="btn-icon btn-nav" onclick="prevLevel()" title="Previous Level" id="btn-prev">
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
+                </button>
                 <button class="btn-icon btn-shuffle" onclick="shuffleLevel()" title="Shuffle">
                     <svg class="icon-svg" viewBox="0 0 24 24">
                         <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+                    </svg>
+                </button>
+                <button class="btn-icon btn-nav" onclick="nextLevel()" title="Next Level" id="btn-next">
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                        <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
                     </svg>
                 </button>
             </div>
@@ -615,18 +660,33 @@
         <p id="completion-time" style="font-family:'Space Mono',monospace; margin:16px 0; color:#666; font-size:1.1rem">00:00</p>
         
         <div class="success-controls">
-            <button class="btn-reset" onclick="replayLevel()">
-                <svg class="icon-svg" viewBox="0 0 24 24">
-                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                </svg>
-                Replay
-            </button>
-            <button class="btn-new" onclick="shuffleLevel(); hideMessage();">
-                <svg class="icon-svg" viewBox="0 0 24 24">
-                    <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
-                </svg>
-                Shuffle
-            </button>
+            <div class="nav-row">
+                <button class="btn-icon btn-nav" onclick="prevLevel(); hideMessage();" title="Previous Level" id="modal-btn-prev">
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
+                </button>
+                <button class="btn-new" onclick="nextLevel(); hideMessage();" id="modal-btn-next">
+                    Next Level
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                        <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="action-row">
+                <button class="btn-reset" onclick="replayLevel()">
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    Replay
+                </button>
+                <button class="btn-reset" onclick="shuffleLevel(); hideMessage();">
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                        <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+                    </svg>
+                    Shuffle
+                </button>
+            </div>
         </div>
     </div>
 
@@ -668,6 +728,7 @@
         // Global State
         let currentLevelData = null; 
         let currentBuiltInIndex = 0;
+        let currentArchiveIndex = -1; // Track position in archive list
         let grid = [];
         let path = [];
         let isDragging = false;
@@ -1246,9 +1307,66 @@
 
             // Pick a random level
             const randomIndex = Math.floor(Math.random() * archiveLevels.length);
+            currentArchiveIndex = randomIndex;
             const levelId = archiveLevels[randomIndex];
             
             fetchAndLoadLevel(levelId);
+        }
+
+        // Navigate to previous level in archive
+        async function prevLevel() {
+            hideMessage();
+            
+            if (archiveLevels.length === 0) {
+                const loaded = await loadArchiveIndex();
+                if (!loaded || archiveLevels.length === 0) {
+                    loadNextBuiltIn();
+                    return;
+                }
+            }
+            
+            // Move to previous (or wrap to end)
+            if (currentArchiveIndex <= 0) {
+                currentArchiveIndex = archiveLevels.length - 1;
+            } else {
+                currentArchiveIndex--;
+            }
+            
+            const levelId = archiveLevels[currentArchiveIndex];
+            fetchAndLoadLevel(levelId);
+        }
+
+        // Navigate to next level in archive
+        async function nextLevel() {
+            hideMessage();
+            
+            if (archiveLevels.length === 0) {
+                const loaded = await loadArchiveIndex();
+                if (!loaded || archiveLevels.length === 0) {
+                    loadNextBuiltIn();
+                    return;
+                }
+            }
+            
+            // Move to next (or wrap to start)
+            if (currentArchiveIndex >= archiveLevels.length - 1) {
+                currentArchiveIndex = 0;
+            } else {
+                currentArchiveIndex++;
+            }
+            
+            const levelId = archiveLevels[currentArchiveIndex];
+            fetchAndLoadLevel(levelId);
+        }
+
+        // Update nav button states
+        function updateNavButtons() {
+            const hasArchive = archiveLevels.length > 0;
+            const btns = ['btn-prev', 'btn-next', 'modal-btn-prev', 'modal-btn-next'];
+            btns.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = !hasArchive;
+            });
         }
 
         async function renderArchive() {
@@ -1275,11 +1393,14 @@
                  return;
             }
 
-            archiveLevels.forEach(levelId => {
+            archiveLevels.forEach((levelId, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'level-card';
                 btn.textContent = levelId;
-                btn.onclick = () => fetchAndLoadLevel(levelId);
+                btn.onclick = () => {
+                    currentArchiveIndex = idx;
+                    fetchAndLoadLevel(levelId);
+                };
                 gridEl.appendChild(btn);
             });
         }
@@ -1293,6 +1414,7 @@
                 
                 loadLevelData(data);
                 setMode('play');
+                updateNavButtons();
                 
             } catch (error) {
                 console.error(error);
@@ -1304,6 +1426,7 @@
                     // Fallback on initial load fail
                     loadLevelData(builtInPuzzles[0]);
                 }
+                updateNavButtons();
             }
         }
 
@@ -1315,6 +1438,7 @@
             } else {
                 loadLevelData(builtInPuzzles[0]);
             }
+            updateNavButtons();
         })();
     </script>
 </body>
