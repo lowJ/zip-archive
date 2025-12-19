@@ -1496,6 +1496,17 @@
                 loadLevelData(builtInPuzzles[0]);
             }
             updateNavButtons();
+            
+            // Handle resize/orientation change on mobile
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    if (currentLevelData) {
+                        loadLevelData(currentLevelData);
+                    }
+                }, 150);
+            });
         })();
     </script>
 </body>
